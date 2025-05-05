@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timer | FR Timer</title>
+  <link rel="icon" href="logo.png" type="image/png" />
+  <meta name="theme-color" content="#0f2027" />
+  <meta name="description" content="Set a countdown timer with sound and vibration.">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 2.2rem;
+    }
+
+    .inputs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    input {
+      width: 60px;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: none;
+      text-align: center;
+      background: #f1f1f1;
+      color: #000;
+    }
+
+    .timer-display {
+      font-size: 2.5rem;
+      margin: 1rem 0;
+      letter-spacing: 2px;
+    }
+
+    button {
+      padding: 0.7rem 1.2rem;
+      margin: 0.3rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      background-color: #00aaff;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background-color: #0077cc;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background-color: #00aaff;
+      color: black;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .back-btn:hover {
+      background-color: #0077cc;
+    }
+  </style>
+</head>
+<body>
+  <button class="back-btn" onclick="location.href='index.html'"><b>Back</b></button>
+
+  <h1>Timer</h1>
+
+  <div class="inputs">
+    <input type="number" id="hours" min="0" max="23" placeholder="HH" />
+    <input type="number" id="minutes" min="0" max="59" placeholder="MM" />
+    <input type="number" id="seconds" min="0" max="59" placeholder="SS" />
+  </div>
+
+  <div class="timer-display" id="timer">00:00:00</div>
+
+  <div>
+    <button onclick="startTimer()">Start</button>
+    <button onclick="pauseTimer()">Pause</button>
+    <button onclick="resetTimer()">Reset</button>
+  </div>
+
+  <audio id="alarm" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+  <audio id="tickSound" src="https://www.soundjay.com/button/beep-09.wav" preload="auto"></audio>
+
+  <script>
+    let totalSeconds = 0;
+    let interval = null;
+
+    function updateDisplay() {
+      let hrs = Math.floor(totalSeconds / 3600);
+      let mins = Math.floor((totalSeconds % 3600) / 60);
+      let secs = totalSeconds % 60;
+      document.getElementById('timer').textContent =
+        String(hrs).padStart(2, '0') + ':' +
+        String(mins).padStart(2, '0') + ':' +
+        String(secs).padStart(2, '0');
+    }
+
+    function startTimer() {
+      if (interval) return;
+
+      if (totalSeconds === 0) {
+        const hrs = parseInt(document.getElementById('hours').value) || 0;
+        const mins = parseInt(document.getElementById('minutes').value) || 0;
+        const secs = parseInt(document.getElementById('seconds').value) || 0;
+        totalSeconds = hrs * 3600 + mins * 60 + secs;
+        if (totalSeconds <= 0) return;
+      }
+
+      interval = setInterval(() => {
+        if (totalSeconds <= 0) {
+          clearInterval(interval);
+          interval = null;
+          document.getElementById('alarm').play();
+          if ("vibrate" in navigator) navigator.vibrate([500, 300, 500]);
+          return;
+        }
+        totalSeconds--;
+        updateDisplay();
+        document.getElementById('tickSound').play();
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(interval);
+      interval = null;
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      totalSeconds = 0;
+      updateDisplay();
+    }
+
+    updateDisplay();
+  </script>
+
+  <!-- Optional Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(reg => console.log('SW registered', reg))
+        .catch(err => console.error('SW registration failed:', err));
+    }
+  </script>
+</body>
+</html>
