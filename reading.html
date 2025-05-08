@@ -22,24 +22,24 @@
       position: absolute;
       top: 20px;
       left: 20px;
-      background: linear-gradient(145deg, #4facfe, #000000);
-      border: none;
+      padding: 1rem 1.5rem;
+      font-size: 3rem;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #00c6ff, #0072ff);
       color: #fff;
-      padding: 8px 16px;
-      font-size: 1.6rem;
-      font-weight: bold;
+      border: none;
       cursor: pointer;
-      border-radius: 10px;
-      transition: 0.3s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
     }
 
     .back-btn:hover {
-      background: linear-gradient(145deg, #3ea3f5, #1a1a1a);
+      transform: scale(1.07);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
     }
 
     .status {
-      font-size: 1.6rem;
+      font-size: 2.2rem;
       margin-top: 90px;
       margin-bottom: 1.8rem;
       color: #00c6ff;
@@ -95,8 +95,6 @@
     .history ul {
       list-style-type: none;
       padding-left: 0;
-      max-height: 250px;
-      overflow-y: auto;
     }
 
     .history li {
