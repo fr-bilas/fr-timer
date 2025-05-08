@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Watch | FR Timer</title>
   <link rel="icon" href="logo.png" type="image/png" />
-
-  <!-- Optional PWA support -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0f2027" />
   <meta name="description" content="Digital watch view for FR Timer.">
@@ -53,17 +51,28 @@
     }
 
     #digitalClock {
-      font-size: 3.5rem;
+      font-size: 7rem;
       font-weight: bold;
       font-family: 'Segoe UI', sans-serif;
       margin-bottom: 0.5rem;
-      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+      letter-spacing: 2px;
+    }
+
+    .seconds {
+      font-size: 2rem;
+    }
+
+    .ampm {
+      font-size: 1.5rem;
+      color: red;
+      margin-left: 8px;
     }
 
     #date {
       font-size: 1.5rem;
       color: #ccc;
-      font-style: italic;
+      font-style: futura;
     }
   </style>
 </head>
@@ -78,14 +87,15 @@
   <script>
     function updateClock() {
       const now = new Date();
-      const time = now.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-      const date = now.toDateString();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const seconds = now.getSeconds().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes}<span class="seconds">:${seconds}</span><span class="ampm">${ampm}</span>`;
+      document.getElementById('digitalClock').innerHTML = formattedTime;
 
-      document.getElementById('digitalClock').textContent = time;
+      const date = now.toDateString();
       document.getElementById('date').textContent = date;
     }
 
@@ -93,7 +103,6 @@
     setInterval(updateClock, 1000);
   </script>
 
-  <!-- Optional Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
