@@ -1,270 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Daily Reading Time</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Monthly Reading Graph</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
+      margin: 0;
+      font-family: sans-serif;
       background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #ffffff;
-      font-family: 'Segoe UI', sans-serif;
-      padding: 1rem;
-      min-height: 100vh;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-
-    .back-btn {
-      background-color: #87CEFA;
-      border: none;
-      color: black;
-      font-weight: bold;
-      border-radius: 6px;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-    }
-
-    h1 {
-      font-size: 1.2rem;
-      color: #00c6ff;
-      text-align: center;
-      margin: auto;
-    }
-
-    #controls {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 1rem;
-      margin: 2rem 0 1rem 0;
-    }
-
-    .control-item {
+      color: #00bfff;
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 20px;
+      height: 100vh;
     }
 
-    .control-item label {
-      font-size: 1rem;
-      color: #ccc;
-      margin-bottom: 0.3rem;
+    .top-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
     }
 
-    input[type="number"], button, input[type="color"] {
-      font-size: 1rem;
-      padding: 0.5rem;
-      border-radius: 8px;
-      border: none;
-      text-align: center;
-    }
-
-    input[type="number"] {
-      width: 70px;
-    }
-
-    .button-primary {
-      background: linear-gradient(45deg, #00c6ff, #0072ff);
-      color: white;
+    .back-button {
+      background-color: #00bfff;
+      color: black;
       font-weight: bold;
-      padding: 0.7rem 1.5rem;
-      transition: 0.3s;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      cursor: pointer;
     }
 
-    .button-primary:hover {
-      transform: scale(1.05);
-    }
-
-    .menu {
+    .menu-button {
+      background: none;
+      border: none;
+      color: #00bfff;
+      font-size: 24px;
+      cursor: pointer;
       position: relative;
-      display: inline-block;
     }
 
     .menu-content {
       display: none;
       position: absolute;
-      background-color: #1e1e1e;
-      min-width: 120px;
-      border-radius: 8px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-      z-index: 1;
+      top: 30px;
       right: 0;
-      padding: 0.5rem;
+      background-color: #222;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      z-index: 1;
     }
 
-    .menu-content label {
-      font-size: 0.9rem;
-      color: #ddd;
-    }
-
-    .menu-content input[type="color"] {
-      margin-top: 0.3rem;
-    }
-
-    .menu:hover .menu-content {
+    .menu-content button {
       display: block;
+      background: none;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      text-align: left;
+      cursor: pointer;
+      width: 100%;
     }
 
-    .dots {
-      font-size: 1.8rem;
-      cursor: pointer;
-      color: #aaa;
-      padding: 0 1rem;
+    .menu-content button:hover {
+      background-color: #333;
     }
 
     canvas {
-      margin-top: 1rem;
-      width: 100%;
-      max-width: 500px;
-      height: 400px;
+      max-width: 100%;
+      max-height: 300px;
     }
 
-    .reset-container {
-      text-align: center;
-      margin-top: 1rem;
+    .input-section {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      align-items: center;
     }
 
-    .reset-btn {
-      background-color: #ff4d4d;
-      color: white;
-      padding: 0.6rem 1.2rem;
-      font-size: 1rem;
-      border: none;
+    .input-section input {
+      width: 80px;
+      padding: 10px;
+      font-size: 16px;
       border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      border: none;
+      text-align: center;
     }
 
-    .reset-btn:hover {
-      background-color: #cc0000;
+    .input-section button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #00bfff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .month-label {
+      margin-top: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <button class="back-btn" onclick="history.back()">Back</button>
-    <h1>Daily Reading Time</h1>
-    <div class="menu">
-      <div class="dots">&#8942;</div>
-      <div class="menu-content">
-        <label>Change Color:</label>
-        <input type="color" id="colorPicker" value="#00aaff" />
+  <div class="top-bar">
+    <button class="back-button" onclick="history.back()">Back</button>
+    <div style="position: relative;">
+      <button class="menu-button" onclick="toggleMenu()">⋮</button>
+      <div class="menu-content" id="menu">
+        <button onclick="changeColor('#00bfff')">Blue</button>
+        <button onclick="changeColor('#4caf50')">Green</button>
+        <button onclick="changeColor('#ff9800')">Orange</button>
+        <button onclick="changeColor('#ff4d4d')">Red</button>
+        
       </div>
     </div>
   </div>
 
-  <div id="controls">
-    <div class="control-item">
-      <label for="weekInput">Day:</label>
-      <input type="number" id="weekInput" min="1" max="7" />
-    </div>
-    <div class="control-item">
-      <label for="hourInput">Hours:</label>
-      <input type="number" id="hourInput" min="0" />
-    </div>
-    <div class="control-item">
-      <label for="minuteInput">Minutes:</label>
-      <input type="number" id="minuteInput" min="0" />
-    </div>
-    <div class="control-item">
-      <button class="button-primary" onclick="updateReading()">Update</button>
-    </div>
+  <h2>Monthly Reading Time</h2>
+  <canvas id="readingChart" width="350" height="200"></canvas>
+  <div class="month-label" id="monthLabel"></div>
+
+  <div class="input-section">
+    <input type="number" id="readingHours" placeholder="Hours" min="0" step="0.1">
+    <button onclick="addReadingTime()">Add Reading Time</button>
   </div>
 
-  <canvas id="readingChart"></canvas>
-
-  <div class="reset-container">
-    <button class="reset-btn" onclick="resetGraph()">Reset</button>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    let readingData = JSON.parse(localStorage.getItem('readingData')) || Array(7).fill(0);
-    let chartColor = localStorage.getItem('chartColor') || "#00aaff";
+    // Build label array for each day of current month with weekday names
+    function generateLabelsAndData() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+      const labels = [];
+      for (let day = 1; day <= daysInMonth; day++) {
+        const d = new Date(year, month, day);
+        labels.push(dayNames[d.getDay()]);
+      }
+
+      let data = JSON.parse(localStorage.getItem('monthlyReadingData'));
+      if (!data || data.length !== daysInMonth) {
+        data = new Array(daysInMonth).fill(0);
+        localStorage.setItem('monthlyReadingData', JSON.stringify(data));
+      }
+
+      return { labels, data };
+    }
+
+    let { labels, data } = generateLabelsAndData();
     const ctx = document.getElementById('readingChart').getContext('2d');
+
     const chart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"],
+        labels: labels,
         datasets: [{
           label: 'Hours Read',
-          data: readingData,
-          backgroundColor: chartColor
+          data: data,
+          backgroundColor: '#00bfff',
+          borderColor: '#00bfff',
+          borderWidth: 1,
+          barThickness: 6
         }]
       },
       options: {
         responsive: true,
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: context => `${context.parsed.y.toFixed(2)} hours`
-            }
-          }
-        },
         scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Hours'
-            }
-          },
-          x: {
-            title: {
-              display: true,
-              text: 'Days of the Week'
-            }
-          }
+          y: { beginAtZero: true }
         }
       }
     });
 
-    function updateChartColor(color) {
-      chartColor = color;
-      chart.data.datasets[0].backgroundColor = color;
-      chart.update();
-      localStorage.setItem('chartColor', color);
+    // Month label
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const currentMonth = new Date().getMonth();
+    document.getElementById("monthLabel").textContent = monthNames[currentMonth];
+
+    function toggleMenu() {
+      const menu = document.getElementById('menu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
 
-    function updateReading() {
-      const day = parseInt(document.getElementById("weekInput").value);
-      const hours = parseInt(document.getElementById("hourInput").value);
-      const minutes = parseInt(document.getElementById("minuteInput").value);
-      const color = document.getElementById("colorPicker").value;
+    function changeColor(color) {
+      chart.data.datasets[0].backgroundColor = color;
+      chart.data.datasets[0].borderColor = color;
+      chart.update();
+      toggleMenu();
+    }
 
-      if (isNaN(day) || isNaN(hours) || isNaN(minutes) || day < 1 || day > 7 || hours < 0 || minutes < 0) {
-        alert("Please enter valid values.");
+    function addReadingTime() {
+      const input = document.getElementById('readingHours');
+      const hours = parseFloat(input.value);
+      if (isNaN(hours) || hours <= 0) {
+        alert("Please enter a valid number of hours.");
         return;
       }
 
-      const totalHours = hours + (minutes / 60);
-      readingData[day - 1] = parseFloat(totalHours.toFixed(2));
-      chart.data.datasets[0].data = readingData;
-      updateChartColor(color);
+      const today = new Date().getDate() - 1; // 0-based index
+      data[today] += hours;
+      localStorage.setItem('monthlyReadingData', JSON.stringify(data));
+      chart.data.datasets[0].data = data;
       chart.update();
-      localStorage.setItem('readingData', JSON.stringify(readingData));
+      input.value = "";
     }
 
-    function resetGraph() {
-      if (confirm("Are you sure you want to reset all data?")) {
-        readingData = Array(7).fill(0);
-        chart.data.datasets[0].data = readingData;
-        chart.update();
-        localStorage.removeItem('readingData');
+    function resetToday() {
+      const today = new Date().getDate() - 1;
+      data[today] = 0;
+      localStorage.setItem('monthlyReadingData', JSON.stringify(data));
+      chart.data.datasets[0].data = data;
+      chart.update();
+    }
+
+    function resetMonth() {
+      data = new Array(data.length).fill(0);
+      localStorage.setItem('monthlyReadingData', JSON.stringify(data));
+      chart.data.datasets[0].data = data;
+      chart.update();
+    }
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.menu-button') && !e.target.closest('#menu')) {
+        document.getElementById('menu').style.display = 'none';
       }
-    }
-
-    document.getElementById("colorPicker").addEventListener("input", e => {
-      updateChartColor(e.target.value);
     });
   </script>
+
 </body>
 </html>
