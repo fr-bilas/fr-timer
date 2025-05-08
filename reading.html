@@ -75,7 +75,7 @@
     }
 
     .history {
-      margin-top: auto;
+      margin-top: 2rem;
       width: 100%;
       max-width: 600px;
       background: rgba(255, 255, 255, 0.1);
@@ -167,7 +167,6 @@
       const today = getTodayDate();
       let data = JSON.parse(localStorage.getItem(key)) || {};
 
-      // Update date if needed
       if (data.date !== today) {
         data = { date: today, sessions: [] };
       }
@@ -184,7 +183,6 @@
       if (data && data.date === today) {
         data.sessions.forEach(addSessionToHistory);
       } else {
-        // New day, reset storage
         localStorage.setItem(key, JSON.stringify({ date: today, sessions: [] }));
       }
     }
@@ -193,7 +191,6 @@
       return new Date().toISOString().split('T')[0];
     }
 
-    // Load sessions when page loads
     loadSessions();
   </script>
 </body>
