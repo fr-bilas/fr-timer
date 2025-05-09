@@ -53,21 +53,22 @@
     }
 
     button {
-      padding: 1rem 1.5rem;
-      font-size: 3rem;
+      padding: 1.2rem 2rem;
+      font-size: 2.8rem;
       margin: 1rem;
-      border-radius: 12px;
+      border-radius: 16px;
       background: linear-gradient(145deg, #00c6ff, #0072ff);
-      color:  #000000;
-      border: none;
+      color: #000;
+      border: 2px solid rgba(255, 255, 255, 0.3);
       cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(0, 198, 255, 0.3), inset 0 -3px 5px rgba(0, 0, 0, 0.2);
     }
 
     button:hover {
-      transform: scale(1.07);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      transform: scale(1.08);
+      box-shadow: 0 12px 28px rgba(0, 198, 255, 0.4), inset 0 -4px 6px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(145deg, #00e0ff, #005eff);
     }
 
     .history {
@@ -187,10 +188,11 @@
       const today = getTodayDate();
       const data = JSON.parse(localStorage.getItem(key));
 
-      if (data && data.date === today) {
-        data.sessions.forEach(addSessionToHistory);
-      } else {
+      if (!data || data.date !== today) {
         localStorage.setItem(key, JSON.stringify({ date: today, sessions: [] }));
+        document.getElementById("sessionList").innerHTML = '';
+      } else {
+        data.sessions.forEach(addSessionToHistory);
       }
     }
 
