@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>Reading Time</title>
   <style>
-    /* আগের মতই সব স্টাইল, তবে থ্রি-ডট ও ডাউনলোড বাদ */
     body {
       background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
       color: #fff;
@@ -30,6 +29,7 @@
       color: #000;
       border: none;
       cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
 
     .status {
@@ -41,25 +41,34 @@
     }
 
     .timer {
-      font-size: 6rem;
+      font-size: 7rem;
       font-weight: bold;
       margin: 2rem 0;
-      padding: 2rem 3.5rem;
+      padding: 2.5rem 4rem;
       background: radial-gradient(circle at center, #1c1c1c, #000000);
       border: 5px solid #00c6ff;
       border-radius: 50px;
       color: #00c6ff;
+      box-shadow: 0 0 30px rgba(0, 198, 255, 0.4);
     }
 
     button {
       padding: 1.2rem 2rem;
-      font-size: 2.4rem;
+      font-size: 2.8rem;
       margin: 1rem;
       border-radius: 16px;
       background: linear-gradient(145deg, #00c6ff, #0072ff);
       color: #000;
-      border: none;
+      border: 2px solid rgba(255, 255, 255, 0.3);
       cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(0, 198, 255, 0.3), inset 0 -3px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    button:hover {
+      transform: scale(1.08);
+      box-shadow: 0 12px 28px rgba(0, 198, 255, 0.4), inset 0 -4px 6px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(145deg, #00e0ff, #005eff);
     }
 
     .history {
@@ -87,6 +96,11 @@
       padding: 1rem 0;
       font-size: 1.9rem;
       border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
   </style>
 </head>
@@ -117,6 +131,7 @@
 
     function stopReading() {
       if (!startTime) return;
+
       const endTime = Date.now();
       clearInterval(timerInterval);
       timerInterval = null;
@@ -175,10 +190,7 @@
       const today = getTodayDate();
       const data = JSON.parse(localStorage.getItem(key));
 
-      if (!data || data.date !== today) {
-        localStorage.setItem(key, JSON.stringify({ date: today, sessions: [] }));
-        document.getElementById("sessionList").innerHTML = '';
-      } else {
+      if (data && data.date === today) {
         data.sessions.forEach(addSessionToHistory);
       }
     }
@@ -187,15 +199,35 @@
       return new Date().toISOString().split('T')[0];
     }
 
+    // Auto save on exit
     window.addEventListener('beforeunload', function () {
       if (startTime) {
         stopReading();
       }
     });
 
-    // Clear today's session data
-    localStorage.setItem('reading_data', JSON.stringify({ date: getTodayDate(), sessions: [] }));
+    // Midnight auto reset
+    function scheduleMidnightReset() {
+      const now = new Date();
+      const millisTillMidnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        0, 0, 0, 0
+      ) - now;
+
+      setTimeout(() => {
+        localStorage.setItem('reading_data', JSON.stringify({
+          date: getTodayDate(),
+          sessions: []
+        }));
+        document.getElementById("sessionList").innerHTML = '';
+        scheduleMidnightReset(); // next midnight
+      }, millisTillMidnight);
+    }
+
     loadSessions();
+    scheduleMidnightReset();
   </script>
 </body>
 </html>
