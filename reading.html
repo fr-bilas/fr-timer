@@ -41,10 +41,10 @@
     }
 
     .timer {
-      font-size: 10rem;
+      font-size: 8rem;
       font-weight: bold;
       margin: 2rem 0;
-      padding: 2.5rem 4rem;
+      padding: 2rem 3rem;
       background: radial-gradient(circle at center, #1c1c1c, #000000);
       border: 5px solid #00c6ff;
       border-radius: 50px;
@@ -79,6 +79,7 @@
       padding: 1.3rem;
       border-radius: 14px;
       text-align: center;
+      position: relative;
     }
 
     .history h3 {
@@ -97,10 +98,40 @@
       font-size: 1.9rem;
       border-bottom: 2px solid rgba(255, 255, 255, 0.15);
       text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+    }
+
+    .menu {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      cursor: pointer;
+      font-size: 2rem;
+      color: #00c6ff;
+    }
+
+    .menu-options {
+      display: none;
+      position: absolute;
+      top: 40px;
+      right: 15px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid #00c6ff;
+      border-radius: 8px;
+      padding: 0.5rem;
+    }
+
+    .menu-options button {
+      font-size: 1.6rem;
+      padding: 0.5rem 1rem;
+      width: 100%;
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .menu-options button:hover {
+      background: rgba(255, 255, 255, 0.1);
     }
   </style>
 </head>
@@ -108,13 +139,17 @@
   <button class="back-btn" onclick="window.history.back()">Back</button>
 
   <div class="status" id="readingStatus">Not started</div>
-  <div class="timer" id="timerDisplay">00:00</div>
+  <div class="timer" id="timerDisplay">00:00:00</div>
 
   <button onclick="startReading()">Start Reading</button>
   <button onclick="stopReading()">Stop Reading</button>
 
   <div class="history">
     <h3>Today's Sessions</h3>
+    <div class="menu" onclick="toggleMenu()">⋮</div>
+    <div class="menu-options" id="menuOptions">
+      <button onclick="downloadSessions()">Download</button>
+    </div>
     <ul id="sessionList"></ul>
   </div>
 
@@ -137,7 +172,8 @@
       timerInterval = null;
 
       const totalSeconds = Math.floor((endTime - startTime) / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
       const seconds = totalSeconds % 60;
 
       const start = new Date(startTime);
@@ -145,22 +181,24 @@
       const formatTime = time =>
         time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      const sessionText = `${formatTime(start)} ⟶ ${formatTime(end)} — ${minutes} min ${seconds} sec`;
+      const sessionText = `${formatTime(start)} ⟶ ${formatTime(end)} — ${hours} hr ${minutes} min ${seconds} sec`;
 
-      document.getElementById("readingStatus").textContent = `Last session: ${minutes} min ${seconds} sec`;
+      document.getElementById("readingStatus").textContent = `Last session: ${hours} hr ${minutes} min ${seconds} sec`;
       addSessionToHistory(sessionText);
       saveSession(sessionText);
 
       startTime = null;
-      document.getElementById("timerDisplay").textContent = "00:00";
+      document.getElementById("timerDisplay").textContent = "00:00:00";
     }
 
     function updateReadingTime() {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const minutes = Math.floor(elapsed / 60);
+      const hours = Math.floor(elapsed / 3600);
+      const minutes = Math.floor((elapsed % 3600) / 60);
       const seconds = elapsed % 60;
+
       document.getElementById("timerDisplay").textContent =
-        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
 
     function addSessionToHistory(text) {
@@ -200,7 +238,33 @@
       return new Date().toISOString().split('T')[0];
     }
 
-    // পেজ থেকে বের হওয়ার সময় session auto save
+    function downloadSessions() {
+      const data = JSON.parse(localStorage.getItem('reading_data'));
+      if (!data || !data.sessions.length) return;
+
+      const content = data.sessions.join('\n');
+      const blob = new Blob([content], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'reading_sessions.txt';
+      link.click();
+    }
+
+    function toggleMenu() {
+      const menu = document.getElementById('menuOptions');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Auto-reset storage if new day starts
+    setInterval(() => {
+      const saved = JSON.parse(localStorage.getItem('reading_data'));
+      const today = getTodayDate();
+      if (saved && saved.date !== today) {
+        localStorage.setItem('reading_data', JSON.stringify({ date: today, sessions: [] }));
+        document.getElementById("sessionList").innerHTML = '';
+      }
+    }, 60000); // check every 1 minute
+
     window.addEventListener('beforeunload', function () {
       if (startTime) {
         stopReading();
