@@ -18,20 +18,16 @@
       position: relative;
     }
 
-    .back-btn {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      padding: 0.3rem 0.8rem;
-      font-size: 3rem;
-      border-radius: 8px;
-      background-color: #00c6ff;
-      color: #000;
+   .back-button {
+      background-color: #00bfff;
+      color: black;
+      font-weight: bold;
+      padding: 10px 20px;
       border: none;
+      border-radius: 10px;
+      font-size: 18px;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
-
     .status {
       font-size: 2.2rem;
       margin-top: 90px;
@@ -42,164 +38,3 @@
 
     .timer {
       font-size: 10rem;
-      font-weight: bold;
-      margin: 2rem 0;
-      padding: 2.5rem 4rem;
-      background: radial-gradient(circle at center, #1c1c1c, #000000);
-      border: 5px solid #00c6ff;
-      border-radius: 50px;
-      color: #00c6ff;
-      box-shadow: 0 0 30px rgba(0, 198, 255, 0.4);
-    }
-
-    button {
-      padding: 1rem 1.5rem;
-      font-size: 4.5rem;
-      margin: 1rem;
-      border-radius: 12px;
-      background: linear-gradient(145deg, #00c6ff, #0072ff);
-      color: #000;
-      border: none;
-      cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
-    }
-
-    button:hover {
-      transform: scale(1.07);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    }
-
-    .history {
-      margin-top: 2rem;
-      width: 100%;
-      max-width: 700px;
-      background: rgba(255, 255, 255, 0.08);
-      padding: 1.3rem;
-      border-radius: 14px;
-      text-align: left;
-    }
-
-    .history h3 {
-      margin-bottom: 0.8rem;
-      color: #00c6ff;
-      font-size: 1.8rem;
-    }
-
-    .history ul {
-      list-style-type: none;
-      padding-left: 0;
-    }
-
-    .history li {
-      padding: 1rem 0;
-      font-size: 1.9rem;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
-    }
-  </style>
-</head>
-<body>
-  <button class="back-btn" onclick="window.history.back()"><b>Back</b></button>
-
-  <div class="status" id="readingStatus">Not started</div>
-  <div class="timer" id="timerDisplay">00:00</div>
-
-  <button onclick="startReading()"><b>Start Reading</b></button>
-  <button onclick="stopReading()"><b>Stop Reading</b></button>
-
-  <div class="history">
-    <h3>Today's Sessions</h3>
-    <ul id="sessionList"></ul>
-  </div>
-
-  <script>
-    let startTime = null;
-    let timerInterval = null;
-
-    function startReading() {
-      if (timerInterval) return;
-      startTime = Date.now();
-      document.getElementById("readingStatus").textContent = "Reading started...";
-      timerInterval = setInterval(updateReadingTime, 1000);
-    }
-
-    function stopReading() {
-      if (!startTime) return;
-      clearInterval(timerInterval);
-      timerInterval = null;
-
-      const endTime = Date.now();
-      const totalSeconds = Math.floor((endTime - startTime) / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-
-      const start = new Date(startTime);
-      const end = new Date(endTime);
-      const formatTime = time =>
-        time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      const sessionText = `${formatTime(start)} ⇨ ${formatTime(end)} — ${minutes} min ${seconds} sec`;
-
-      document.getElementById("readingStatus").textContent = `Last session: ${minutes} min ${seconds} sec`;
-      addSessionToHistory(sessionText);
-      saveSession(sessionText);
-
-      startTime = null;
-      document.getElementById("timerDisplay").textContent = "00:00";
-    }
-
-    function updateReadingTime() {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const minutes = Math.floor(elapsed / 60);
-      const seconds = elapsed % 60;
-      document.getElementById("timerDisplay").textContent =
-        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
-
-    function addSessionToHistory(text) {
-      const list = document.getElementById("sessionList");
-      const listItem = document.createElement("li");
-      listItem.textContent = text;
-      list.appendChild(listItem);
-    }
-
-    function saveSession(text) {
-      const key = 'reading_data';
-      const today = getTodayDate();
-      let data = JSON.parse(localStorage.getItem(key)) || {};
-
-      if (data.date !== today) {
-        data = { date: today, sessions: [] };
-      }
-
-      data.sessions.push(text);
-      localStorage.setItem(key, JSON.stringify(data));
-    }
-
-    function loadSessions() {
-      const key = 'reading_data';
-      const today = getTodayDate();
-      const data = JSON.parse(localStorage.getItem(key));
-
-      if (data && data.date === today) {
-        data.sessions.forEach(addSessionToHistory);
-      } else {
-        localStorage.setItem(key, JSON.stringify({ date: today, sessions: [] }));
-      }
-    }
-
-    function getTodayDate() {
-      return new Date().toISOString().split('T')[0];
-    }
-
-    // পেজ থেকে বের হওয়ার সময় সেশন সংরক্ষণ
-    window.addEventListener('beforeunload', function () {
-      if (startTime) {
-        stopReading();
-      }
-    });
-
-    loadSessions();
-  </script>
-</body>
-</html>
