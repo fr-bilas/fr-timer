@@ -22,20 +22,14 @@
       position: absolute;
       top: 20px;
       left: 20px;
-      padding: 1rem 1.5rem;
-      font-size: 3rem;
-      border-radius: 12px;
-      background: linear-gradient(145deg, #00c6ff, #0072ff);
-      color: #fff;
+      padding: 0.3rem 0.8rem;
+      font-size: 2rem;
+      border-radius: 8px;
+      background-color: #00c6ff;
+      color: #000;
       border: none;
       cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
-    }
-
-    .back-btn:hover {
-      transform: scale(1.07);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
 
     .status {
@@ -64,7 +58,7 @@
       margin: 1rem;
       border-radius: 12px;
       background: linear-gradient(145deg, #00c6ff, #0072ff);
-      color: #fff;
+      color: #000;
       border: none;
       cursor: pointer;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -89,7 +83,7 @@
     .history h3 {
       margin-bottom: 0.8rem;
       color: #00c6ff;
-      font-size: 1.5rem;
+      font-size: 1.8rem;
     }
 
     .history ul {
@@ -99,19 +93,19 @@
 
     .history li {
       padding: 1rem 0;
-      font-size: 1.5rem;
+      font-size: 1.9rem;
       border-bottom: 2px solid rgba(255, 255, 255, 0.15);
     }
   </style>
 </head>
 <body>
-  <button class="back-btn" onclick="window.history.back()">Back</button>
+  <button class="back-btn" onclick="window.history.back()"><b>Back</b></button>
 
   <div class="status" id="readingStatus">Not started</div>
   <div class="timer" id="timerDisplay">00:00</div>
 
-  <button onclick="startReading()">Start Reading</button>
-  <button onclick="stopReading()">Stop Reading</button>
+  <button onclick="startReading()"><b>Start Reading</b></button>
+  <button onclick="stopReading()"><b>Stop Reading</b></button>
 
   <div class="history">
     <h3>Today's Sessions</h3>
@@ -134,16 +128,21 @@
       clearInterval(timerInterval);
       timerInterval = null;
 
-      const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const endTime = Date.now();
+      const totalSeconds = Math.floor((endTime - startTime) / 1000);
       const minutes = Math.floor(totalSeconds / 60);
       const seconds = totalSeconds % 60;
-      const sessionText = `${minutes} min ${seconds} sec`;
 
-      document.getElementById("readingStatus").textContent = `Last session: ${sessionText}`;
-      const timeStamp = new Date().toLocaleTimeString();
-      const entry = `${timeStamp} — ${sessionText}`;
-      addSessionToHistory(entry);
-      saveSession(entry);
+      const start = new Date(startTime);
+      const end = new Date(endTime);
+      const formatTime = time =>
+        time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const sessionText = `${formatTime(start)} ⇨ ${formatTime(end)} — ${minutes} min ${seconds} sec`;
+
+      document.getElementById("readingStatus").textContent = `Last session: ${minutes} min ${seconds} sec`;
+      addSessionToHistory(sessionText);
+      saveSession(sessionText);
 
       startTime = null;
       document.getElementById("timerDisplay").textContent = "00:00";
@@ -192,6 +191,13 @@
     function getTodayDate() {
       return new Date().toISOString().split('T')[0];
     }
+
+    // পেজ থেকে বের হওয়ার সময় সেশন সংরক্ষণ
+    window.addEventListener('beforeunload', function () {
+      if (startTime) {
+        stopReading();
+      }
+    });
 
     loadSessions();
   </script>
