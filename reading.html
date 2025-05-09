@@ -41,10 +41,10 @@
     }
 
     .timer {
-      font-size: 8rem;
+      font-size: 6rem;
       font-weight: bold;
       margin: 2rem 0;
-      padding: 2rem 3rem;
+      padding: 2rem 3.5rem;
       background: radial-gradient(circle at center, #1c1c1c, #000000);
       border: 5px solid #00c6ff;
       border-radius: 50px;
@@ -54,7 +54,7 @@
 
     button {
       padding: 1.2rem 2rem;
-      font-size: 2.8rem;
+      font-size: 2.4rem;
       margin: 1rem;
       border-radius: 16px;
       background: linear-gradient(145deg, #00c6ff, #0072ff);
@@ -79,7 +79,6 @@
       padding: 1.3rem;
       border-radius: 14px;
       text-align: center;
-      position: relative;
     }
 
     .history h3 {
@@ -97,46 +96,60 @@
       padding: 1rem 0;
       font-size: 1.9rem;
       border-bottom: 2px solid rgba(255, 255, 255, 0.15);
-      text-align: center;
     }
 
     .menu {
       position: absolute;
-      top: 15px;
-      right: 15px;
-      cursor: pointer;
-      font-size: 2rem;
-      color: #00c6ff;
+      top: 20px;
+      right: 20px;
     }
 
-    .menu-options {
+    .menu-button {
+      font-size: 2.6rem;
+      background: none;
+      border: none;
+      color: #00c6ff;
+      cursor: pointer;
+    }
+
+    .dropdown {
       display: none;
       position: absolute;
-      top: 40px;
-      right: 15px;
-      background: rgba(0, 0, 0, 0.8);
+      right: 0;
+      background: #1e2a38;
       border: 1px solid #00c6ff;
       border-radius: 8px;
       padding: 0.5rem;
+      z-index: 10;
     }
 
-    .menu-options button {
-      font-size: 1.6rem;
-      padding: 0.5rem 1rem;
-      width: 100%;
+    .dropdown button {
+      display: block;
       background: none;
       border: none;
       color: #fff;
+      font-size: 1.8rem;
+      padding: 0.5rem 1rem;
+      width: 100%;
+      text-align: left;
       cursor: pointer;
     }
 
-    .menu-options button:hover {
-      background: rgba(255, 255, 255, 0.1);
+    .dropdown button:hover {
+      background: #00c6ff;
+      color: #000;
     }
   </style>
 </head>
 <body>
   <button class="back-btn" onclick="window.history.back()">Back</button>
+
+  <div class="menu">
+    <button class="menu-button" onclick="toggleDropdown()">⋮</button>
+    <div class="dropdown" id="dropdownMenu">
+      <button onclick="downloadSessions()">Download Sessions</button>
+    </div>
+  </div>
 
   <div class="status" id="readingStatus">Not started</div>
   <div class="timer" id="timerDisplay">00:00:00</div>
@@ -146,10 +159,6 @@
 
   <div class="history">
     <h3>Today's Sessions</h3>
-    <div class="menu" onclick="toggleMenu()">⋮</div>
-    <div class="menu-options" id="menuOptions">
-      <button onclick="downloadSessions()">Download</button>
-    </div>
     <ul id="sessionList"></ul>
   </div>
 
@@ -166,7 +175,6 @@
 
     function stopReading() {
       if (!startTime) return;
-
       const endTime = Date.now();
       clearInterval(timerInterval);
       timerInterval = null;
@@ -181,9 +189,9 @@
       const formatTime = time =>
         time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      const sessionText = `${formatTime(start)} ⟶ ${formatTime(end)} — ${hours} hr ${minutes} min ${seconds} sec`;
+      const sessionText = `${formatTime(start)} ⟶ ${formatTime(end)} — ${hours}h ${minutes}m ${seconds}s`;
 
-      document.getElementById("readingStatus").textContent = `Last session: ${hours} hr ${minutes} min ${seconds} sec`;
+      document.getElementById("readingStatus").textContent = `Last session: ${hours}h ${minutes}m ${seconds}s`;
       addSessionToHistory(sessionText);
       saveSession(sessionText);
 
@@ -196,7 +204,6 @@
       const hours = Math.floor(elapsed / 3600);
       const minutes = Math.floor((elapsed % 3600) / 60);
       const seconds = elapsed % 60;
-
       document.getElementById("timerDisplay").textContent =
         `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
@@ -238,32 +245,28 @@
       return new Date().toISOString().split('T')[0];
     }
 
+    function toggleDropdown() {
+      const menu = document.getElementById("dropdownMenu");
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+
     function downloadSessions() {
-      const data = JSON.parse(localStorage.getItem('reading_data'));
-      if (!data || !data.sessions.length) return;
-
-      const content = data.sessions.join('\n');
-      const blob = new Blob([content], { type: 'text/plain' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'reading_sessions.txt';
-      link.click();
-    }
-
-    function toggleMenu() {
-      const menu = document.getElementById('menuOptions');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
-
-    // Auto-reset storage if new day starts
-    setInterval(() => {
-      const saved = JSON.parse(localStorage.getItem('reading_data'));
-      const today = getTodayDate();
-      if (saved && saved.date !== today) {
-        localStorage.setItem('reading_data', JSON.stringify({ date: today, sessions: [] }));
-        document.getElementById("sessionList").innerHTML = '';
+      const data = JSON.parse(localStorage.getItem("reading_data"));
+      if (!data || !data.sessions.length) {
+        alert("No sessions to download.");
+        return;
       }
-    }, 60000); // check every 1 minute
+
+      const content = data.sessions.join("\n");
+      const blob = new Blob([content], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "reading_sessions.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
 
     window.addEventListener('beforeunload', function () {
       if (startTime) {
