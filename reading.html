@@ -213,7 +213,7 @@
         const formatTime = time =>
           time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        const sessionText = `${formatTime(start)} ⟶ ${formatTime(end)} — ${hours}h ${minutes}m ${seconds}s`;
+        const sessionText = `${formatTime(start)} — ${formatTime(end)} → ${hours}h ${minutes}m ${seconds}s`;
 
         document.getElementById("readingStatus").textContent = `Last session: ${hours}h ${minutes}m ${seconds}s`;
         addSessionToHistory(sessionText);
