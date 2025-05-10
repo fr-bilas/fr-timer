@@ -38,7 +38,7 @@
       font-weight: bold;
     }
     .timer {
-      font-size: 9rem;
+      font-size: 8rem;
       font-weight: bold;
       margin: 2rem 0;
       padding: 2.5rem 4rem;
@@ -110,6 +110,13 @@
     let startTime = null;
     let timerInterval = null;
 
+    // আজকের দিনের জন্য পুরানো সেশন ক্লিয়ার করে নতুন করে শুরু
+    localStorage.setItem('reading_data', JSON.stringify({
+      date: new Date().toISOString().split('T')[0],
+      sessions: []
+    }));
+    document.getElementById("sessionList").innerHTML = '';
+
     function startReading() {
       if (timerInterval) return;
       startTime = Date.now();
@@ -167,15 +174,6 @@
       localStorage.setItem(key, JSON.stringify(data));
     }
 
-    function loadSessions() {
-      const key = 'reading_data';
-      const today = getTodayDate();
-      const data = JSON.parse(localStorage.getItem(key));
-      if (data && data.date === today) {
-        data.sessions.forEach(addSessionToHistory);
-      }
-    }
-
     function getTodayDate() {
       return new Date().toISOString().split('T')[0];
     }
@@ -196,7 +194,6 @@
       }, millisTillMidnight);
     }
 
-    loadSessions();
     scheduleMidnightReset();
   </script>
 </body>
