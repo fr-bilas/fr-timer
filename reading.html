@@ -41,7 +41,7 @@
     }
 
     .timer {
-      font-size: 8rem;
+      font-size: 9rem;
       font-weight: bold;
       margin: 2rem 0;
       padding: 2.5rem 4rem;
@@ -199,32 +199,7 @@
       return new Date().toISOString().split('T')[0];
     }
 
-    // Auto save on exit
-    window.addEventListener('beforeunload', function () {
-      if (startTime) {
-        const endTime = Date.now();
-        const totalSeconds = Math.floor((endTime - startTime) / 1000);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-
-        const start = new Date(startTime);
-        const end = new Date(endTime);
-        const formatTime = time =>
-          time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        const sessionText = `${formatTime(start)} — ${formatTime(end)} → ${hours}h ${minutes}m ${seconds}s`;
-
-        document.getElementById("readingStatus").textContent = `Last session: ${hours}h ${minutes}m ${seconds}s`;
-        addSessionToHistory(sessionText);
-        saveSession(sessionText);
-
-        startTime = null;
-        document.getElementById("timerDisplay").textContent = "00:00:00";
-      }
-    });
-
-    // Midnight auto reset
+    // Midnight auto reset (only clear sessions)
     function scheduleMidnightReset() {
       const now = new Date();
       const millisTillMidnight = new Date(
