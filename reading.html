@@ -53,22 +53,22 @@
     }
 
     button {
-      padding: 1.2rem 2rem;
-      font-size: 2.8rem;
+      padding: 1.4rem 2.4rem;
+      font-size: 3rem;
       margin: 1rem;
-      border-radius: 16px;
-      background: linear-gradient(145deg, #00c6ff, #0072ff);
-      color: #000;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      background: linear-gradient(145deg, #00d2ff, #3a7bd5);
+      color: #fff;
+      border: none;
       cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 8px 20px rgba(0, 198, 255, 0.3), inset 0 -3px 5px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 10px 25px rgba(0, 198, 255, 0.5), inset 0 -4px 6px rgba(0, 0, 0, 0.3);
     }
 
     button:hover {
-      transform: scale(1.08);
-      box-shadow: 0 12px 28px rgba(0, 198, 255, 0.4), inset 0 -4px 6px rgba(0, 0, 0, 0.3);
-      background: linear-gradient(145deg, #00e0ff, #005eff);
+      transform: scale(1.1);
+      background: linear-gradient(145deg, #00f0ff, #1e90ff);
+      box-shadow: 0 12px 30px rgba(0, 198, 255, 0.6), inset 0 -5px 7px rgba(0, 0, 0, 0.4);
     }
 
     .history {
@@ -93,8 +93,8 @@
     }
 
     .history li {
-      padding: 1rem 0;
-      font-size: 1.9rem;
+      padding: 1.2rem 0;
+      font-size: 2.2rem;
       border-bottom: 2px solid rgba(255, 255, 255, 0.15);
       text-align: center;
       display: flex;
@@ -202,7 +202,25 @@
     // Auto save on exit
     window.addEventListener('beforeunload', function () {
       if (startTime) {
-        stopReading();
+        const endTime = Date.now();
+        const totalSeconds = Math.floor((endTime - startTime) / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        const formatTime = time =>
+          time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        const sessionText = `${formatTime(start)} ⟶ ${formatTime(end)} — ${hours}h ${minutes}m ${seconds}s`;
+
+        document.getElementById("readingStatus").textContent = `Last session: ${hours}h ${minutes}m ${seconds}s`;
+        addSessionToHistory(sessionText);
+        saveSession(sessionText);
+
+        startTime = null;
+        document.getElementById("timerDisplay").textContent = "00:00:00";
       }
     });
 
@@ -222,7 +240,7 @@
           sessions: []
         }));
         document.getElementById("sessionList").innerHTML = '';
-        scheduleMidnightReset(); // next midnight
+        scheduleMidnightReset(); // reschedule for next midnight
       }, millisTillMidnight);
     }
 
