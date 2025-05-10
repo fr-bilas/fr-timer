@@ -17,6 +17,7 @@
       min-height: 100vh;
       position: relative;
     }
+
     .back-btn {
       position: absolute;
       top: 20px;
@@ -30,6 +31,7 @@
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
+
     .status {
       font-size: 2.2rem;
       margin-top: 90px;
@@ -37,6 +39,7 @@
       color: #00c6ff;
       font-weight: bold;
     }
+
     .timer {
       font-size: 8rem;
       font-weight: bold;
@@ -48,6 +51,7 @@
       color: #00c6ff;
       box-shadow: 0 0 30px rgba(0, 198, 255, 0.4);
     }
+
     button {
       padding: 1.4rem 2.4rem;
       font-size: 3rem;
@@ -60,11 +64,13 @@
       transition: all 0.3s ease-in-out;
       box-shadow: 0 10px 25px rgba(0, 198, 255, 0.5), inset 0 -4px 6px rgba(0, 0, 0, 0.3);
     }
+
     button:hover {
       transform: scale(1.1);
       background: linear-gradient(145deg, #00f0ff, #1e90ff);
       box-shadow: 0 12px 30px rgba(0, 198, 255, 0.6), inset 0 -5px 7px rgba(0, 0, 0, 0.4);
     }
+
     .history {
       margin-top: 2rem;
       width: 100%;
@@ -74,15 +80,18 @@
       border-radius: 14px;
       text-align: center;
     }
+
     .history h3 {
       margin-bottom: 0.8rem;
       color: #00c6ff;
       font-size: 1.8rem;
     }
+
     .history ul {
       list-style-type: none;
       padding-left: 0;
     }
+
     .history li {
       padding: 1.2rem 0;
       font-size: 2.2rem;
@@ -97,10 +106,13 @@
 </head>
 <body>
   <button class="back-btn" onclick="window.history.back()">Back</button>
+
   <div class="status" id="readingStatus">Not started</div>
   <div class="timer" id="timerDisplay">00:00:00</div>
+
   <button onclick="startReading()">Start Reading</button>
   <button onclick="stopReading()">Stop Reading</button>
+
   <div class="history">
     <h3>Today's Sessions</h3>
     <ul id="sessionList"></ul>
@@ -109,13 +121,6 @@
   <script>
     let startTime = null;
     let timerInterval = null;
-
-    // আজকের দিনের জন্য পুরানো সেশন ক্লিয়ার করে নতুন করে শুরু
-    localStorage.setItem('reading_data', JSON.stringify({
-      date: new Date().toISOString().split('T')[0],
-      sessions: []
-    }));
-    document.getElementById("sessionList").innerHTML = '';
 
     function startReading() {
       if (timerInterval) return;
@@ -126,6 +131,7 @@
 
     function stopReading() {
       if (!startTime) return;
+
       const endTime = Date.now();
       clearInterval(timerInterval);
       timerInterval = null;
@@ -137,12 +143,15 @@
 
       const start = new Date(startTime);
       const end = new Date(endTime);
-      const formatTime = time => time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const formatTime = time =>
+        time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
       const sessionText = `${formatTime(start)} ⟶ ${formatTime(end)} — ${hours}h ${minutes}m ${seconds}s`;
 
       document.getElementById("readingStatus").textContent = `Last session: ${hours}h ${minutes}m ${seconds}s`;
       addSessionToHistory(sessionText);
       saveSession(sessionText);
+
       startTime = null;
       document.getElementById("timerDisplay").textContent = "00:00:00";
     }
@@ -167,11 +176,26 @@
       const key = 'reading_data';
       const today = getTodayDate();
       let data = JSON.parse(localStorage.getItem(key)) || {};
+
       if (data.date !== today) {
         data = { date: today, sessions: [] };
       }
+
       data.sessions.push(text);
       localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function loadSessions() {
+      const key = 'reading_data';
+      const today = getTodayDate();
+      let data = JSON.parse(localStorage.getItem(key));
+
+      if (!data || data.date !== today) {
+        data = { date: today, sessions: [] };
+        localStorage.setItem(key, JSON.stringify(data));
+      }
+
+      data.sessions.forEach(addSessionToHistory);
     }
 
     function getTodayDate() {
@@ -181,7 +205,10 @@
     function scheduleMidnightReset() {
       const now = new Date();
       const millisTillMidnight = new Date(
-        now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        0, 0, 0, 0
       ) - now;
 
       setTimeout(() => {
@@ -190,10 +217,11 @@
           sessions: []
         }));
         document.getElementById("sessionList").innerHTML = '';
-        scheduleMidnightReset();
+        scheduleMidnightReset(); // schedule again
       }, millisTillMidnight);
     }
 
+    loadSessions();
     scheduleMidnightReset();
   </script>
 </body>
