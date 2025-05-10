@@ -58,7 +58,7 @@
       margin: 1rem;
       border-radius: 20px;
       background: linear-gradient(145deg, #00d2ff, #3a7bd5);
-      color: #000;
+      color: #fff;
       border: none;
       cursor: pointer;
       transition: all 0.3s ease-in-out;
@@ -110,8 +110,8 @@
   <div class="status" id="readingStatus">Not started</div>
   <div class="timer" id="timerDisplay">00:00:00</div>
 
-  <button onclick="startReading()"><b>Start Reading</b></button>
-  <Burton onclick="stopReading()"><b>Stop Reading</b></button>
+  <button onclick="startReading()">Start Reading</button>
+  <button onclick="stopReading()">Stop Reading</button>
 
   <div class="history">
     <h3>Today's Sessions</h3>
@@ -146,7 +146,7 @@
       const formatTime = time =>
         time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      const sessionText = `${formatTime(start)} — ${formatTime(end)} → ${hours}h ${minutes}m ${seconds}s`;
+      const sessionText = `${formatTime(start)} ⟶ ${formatTime(end)} — ${hours}h ${minutes}m ${seconds}s`;
 
       document.getElementById("readingStatus").textContent = `Last session: ${hours}h ${minutes}m ${seconds}s`;
       addSessionToHistory(sessionText);
