@@ -41,7 +41,7 @@
     }
 
     .timer {
-      font-size: 8rem;
+      font-size: 9rem;
       font-weight: bold;
       margin: 2rem 0;
       padding: 2.5rem 4rem;
@@ -58,7 +58,7 @@
       margin: 1rem;
       border-radius: 20px;
       background: linear-gradient(145deg, #00d2ff, #3a7bd5);
-      color: #fff;
+      color: #000;
       border: none;
       cursor: pointer;
       transition: all 0.3s ease-in-out;
@@ -110,11 +110,11 @@
   <div class="status" id="readingStatus">Not started</div>
   <div class="timer" id="timerDisplay">00:00:00</div>
 
-  <button onclick="startReading()">Start Reading</button>
-  <button onclick="stopReading()">Stop Reading</button>
+  <button onclick="startReading()"><b>Start Reading</b></button>
+  <button onclick="stopReading()"><b>Stop Reading</b></button>
 
   <div class="history">
-    <h3>Today's Sessions</h3>
+    <h2>Today's Sessions</h2>
     <ul id="sessionList"></ul>
   </div>
 
@@ -124,12 +124,14 @@
 
     function startReading() {
       if (timerInterval) return;
+
       startTime = Date.now();
+      localStorage.setItem('ongoing_reading_start', startTime); // Save start time
       document.getElementById("readingStatus").textContent = "Reading started...";
       timerInterval = setInterval(updateReadingTime, 1000);
     }
 
-    function stopReading() {
+    function stopReading(manual = true) {
       if (!startTime) return;
 
       const endTime = Date.now();
@@ -146,13 +148,17 @@
       const formatTime = time =>
         time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      const sessionText = `${formatTime(start)} ⟶ ${formatTime(end)} — ${hours}h ${minutes}m ${seconds}s`;
+      const sessionText = `${formatTime(start)} — ${formatTime(end)} → ${hours}h ${minutes}m ${seconds}s`;
 
-      document.getElementById("readingStatus").textContent = `Last session: ${hours}h ${minutes}m ${seconds}s`;
+      if (manual) {
+        document.getElementById("readingStatus").textContent = `Last session: ${hours}h ${minutes}m ${seconds}s`;
+      }
+
       addSessionToHistory(sessionText);
       saveSession(sessionText);
 
       startTime = null;
+      localStorage.removeItem('ongoing_reading_start');
       document.getElementById("timerDisplay").textContent = "00:00:00";
     }
 
@@ -220,6 +226,23 @@
         scheduleMidnightReset(); // schedule again
       }, millisTillMidnight);
     }
+
+    // Handle reading in progress on page unload
+    window.addEventListener('beforeunload', () => {
+      if (startTime) {
+        stopReading(false);
+      }
+    });
+
+    // Restore ongoing reading if page was closed
+    window.addEventListener('load', () => {
+      const savedStart = localStorage.getItem('ongoing_reading_start');
+      if (savedStart) {
+        startTime = parseInt(savedStart);
+        document.getElementById("readingStatus").textContent = "Reading resumed...";
+        timerInterval = setInterval(updateReadingTime, 1000);
+      }
+    });
 
     loadSessions();
     scheduleMidnightReset();
