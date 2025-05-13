@@ -124,9 +124,8 @@
 
     function startReading() {
       if (timerInterval) return;
-
       startTime = Date.now();
-      localStorage.setItem('ongoing_reading_start', startTime); // Save start time
+      localStorage.setItem('ongoing_reading_start', startTime);
       document.getElementById("readingStatus").textContent = "Reading started...";
       timerInterval = setInterval(updateReadingTime, 1000);
     }
@@ -181,7 +180,7 @@
     function saveSession(text) {
       const key = 'reading_data';
       const today = getTodayDate();
-      let data = JSON.parse(localStorage.getItem(key)) || {};
+      let data = JSON.parse(localStorage.getItem(key)) || { date: today, sessions: [] };
 
       if (data.date !== today) {
         data = { date: today, sessions: [] };
@@ -196,12 +195,9 @@
       const today = getTodayDate();
       let data = JSON.parse(localStorage.getItem(key));
 
-      if (!data || data.date !== today) {
-        data = { date: today, sessions: [] };
-        localStorage.setItem(key, JSON.stringify(data));
+      if (data && data.date === today) {
+        data.sessions.forEach(addSessionToHistory);
       }
-
-      data.sessions.forEach(addSessionToHistory);
     }
 
     function getTodayDate() {
@@ -223,18 +219,10 @@
           sessions: []
         }));
         document.getElementById("sessionList").innerHTML = '';
-        scheduleMidnightReset(); // schedule again
+        scheduleMidnightReset(); // reschedule
       }, millisTillMidnight);
     }
 
-    // Handle reading in progress on page unload
-    window.addEventListener('beforeunload', () => {
-      if (startTime) {
-        stopReading(false);
-      }
-    });
-
-    // Restore ongoing reading if page was closed
     window.addEventListener('load', () => {
       const savedStart = localStorage.getItem('ongoing_reading_start');
       if (savedStart) {
@@ -242,10 +230,15 @@
         document.getElementById("readingStatus").textContent = "Reading resumed...";
         timerInterval = setInterval(updateReadingTime, 1000);
       }
+      loadSessions();
+      scheduleMidnightReset();
     });
 
-    loadSessions();
-    scheduleMidnightReset();
+    window.addEventListener('beforeunload', () => {
+      if (startTime) {
+        stopReading(false);
+      }
+    });
   </script>
 </body>
 </html>
