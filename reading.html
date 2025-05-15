@@ -32,6 +32,49 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
 
+    .menu-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .menu-btn {
+      font-size: 3rem;
+      background: none;
+      border: none;
+      color: #00c6ff;
+      cursor: pointer;
+    }
+
+    .menu-dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      margin-top: 10px;
+      background-color: #1a1a1a;
+      border: 1px solid #00c6ff;
+      border-radius: 10px;
+      padding: 0.5rem;
+      box-shadow: 0 2px 10px rgba(0,198,255,0.4);
+      z-index: 999;
+    }
+
+    .menu-dropdown button {
+      background: none;
+      border: none;
+      color: #fff;
+      padding: 0.6rem 1.2rem;
+      text-align: left;
+      font-size: 1.6rem;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .menu-dropdown button:hover {
+      background-color: #00c6ff;
+      color: #000;
+    }
+
     .status {
       font-size: 2.2rem;
       margin-top: 90px;
@@ -107,6 +150,13 @@
 <body>
   <button class="back-btn" onclick="window.history.back()">Back</button>
 
+  <div class="menu-container">
+    <button class="menu-btn" onclick="toggleMenu()">︙</button>
+    <div id="menuDropdown" class="menu-dropdown">
+      <button onclick="resetSessions()">Reset Sessions</button>
+    </div>
+  </div>
+
   <div class="status" id="readingStatus">Not started</div>
   <div class="timer" id="timerDisplay">00:00:00</div>
 
@@ -132,7 +182,6 @@
 
     function stopReading(manual = true) {
       if (!startTime) return;
-
       const endTime = Date.now();
       clearInterval(timerInterval);
       timerInterval = null;
@@ -197,6 +246,11 @@
 
       if (data && data.date === today) {
         data.sessions.forEach(addSessionToHistory);
+      } else {
+        localStorage.setItem(key, JSON.stringify({
+          date: today,
+          sessions: []
+        }));
       }
     }
 
@@ -222,6 +276,27 @@
         scheduleMidnightReset(); // reschedule
       }, millisTillMidnight);
     }
+
+    function toggleMenu() {
+      const dropdown = document.getElementById("menuDropdown");
+      dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    }
+
+    function resetSessions() {
+      localStorage.setItem('reading_data', JSON.stringify({
+        date: getTodayDate(),
+        sessions: []
+      }));
+      document.getElementById("sessionList").innerHTML = '';
+      document.getElementById("readingStatus").textContent = "Sessions reset.";
+      toggleMenu(); // hide menu
+    }
+
+    window.addEventListener('click', function(e) {
+      if (!e.target.matches('.menu-btn')) {
+        document.getElementById("menuDropdown").style.display = "none";
+      }
+    });
 
     window.addEventListener('load', () => {
       const savedStart = localStorage.getItem('ongoing_reading_start');
