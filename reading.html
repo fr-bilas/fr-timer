@@ -48,6 +48,9 @@
 
     .menu-dropdown {
       display: none;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 0.3s ease, transform 0.3s ease;
       position: absolute;
       right: 0;
       margin-top: 10px;
@@ -59,20 +62,29 @@
       z-index: 999;
     }
 
+    .menu-dropdown.show {
+      display: block;
+      opacity: 1;
+      transform: scale(1);
+    }
+
     .menu-dropdown button {
-      background: none;
-      border: none;
-      color: #fff;
-      padding: 0.6rem 1.2rem;
-      text-align: left;
+      background: linear-gradient(145deg, #222, #111);
+      border: 1px solid #00c6ff;
+      border-radius: 8px;
+      color: #00c6ff;
+      padding: 0.8rem 1.5rem;
       font-size: 1.6rem;
-      width: 100%;
+      margin-bottom: 0.5rem;
       cursor: pointer;
+      transition: all 0.2s ease-in-out;
     }
 
     .menu-dropdown button:hover {
       background-color: #00c6ff;
       color: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 198, 255, 0.4);
     }
 
     .status {
@@ -211,7 +223,9 @@
     }
 
     function updateReadingTime() {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const savedStart = localStorage.getItem('ongoing_reading_start');
+      if (!savedStart) return;
+      const elapsed = Math.floor((Date.now() - parseInt(savedStart)) / 1000);
       const hours = Math.floor(elapsed / 3600);
       const minutes = Math.floor((elapsed % 3600) / 60);
       const seconds = elapsed % 60;
@@ -244,7 +258,7 @@
       const today = getTodayDate();
       let data = JSON.parse(localStorage.getItem(key));
 
-      if (data && data.date === today) {
+      if (data && data.date === today && Array.isArray(data.sessions)) {
         data.sessions.forEach(addSessionToHistory);
       } else {
         localStorage.setItem(key, JSON.stringify({
@@ -273,13 +287,13 @@
           sessions: []
         }));
         document.getElementById("sessionList").innerHTML = '';
-        scheduleMidnightReset(); // reschedule
+        scheduleMidnightReset();
       }, millisTillMidnight);
     }
 
     function toggleMenu() {
       const dropdown = document.getElementById("menuDropdown");
-      dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+      dropdown.classList.toggle("show");
     }
 
     function resetSessions() {
@@ -289,12 +303,12 @@
       }));
       document.getElementById("sessionList").innerHTML = '';
       document.getElementById("readingStatus").textContent = "Sessions reset.";
-      toggleMenu(); // hide menu
+      toggleMenu();
     }
 
     window.addEventListener('click', function(e) {
-      if (!e.target.matches('.menu-btn')) {
-        document.getElementById("menuDropdown").style.display = "none";
+      if (!e.target.closest('.menu-container')) {
+        document.getElementById("menuDropdown").classList.remove("show");
       }
     });
 
