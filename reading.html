@@ -1,333 +1,621 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Reading Time</title>
+  <title>Reading Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+ <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00c6ff">
+
   <style>
+    :root {
+      --background-color: #fff;
+      --text-color: #000;
+      --primary-color: #00c6ff;
+      --secondary-color: #0066ff;
+      --card-background: rgba(0,198,255,0.08);
+      --border-color: rgba(0,0,0,0.1);
+    }
+    
+    body.dark { 
+      --background-color: #121212; 
+      --text-color: #fff; 
+      --card-background: rgba(0,198,255,0.12);
+      --border-color: rgba(255,255,255,0.1);
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
     body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-      text-align: center;
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
+      background: var(--background-color); 
+      color: var(--text-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; 
+      padding: 2rem 1rem;
+      display: flex; 
+      flex-direction: column; 
       align-items: center;
-      justify-content: flex-start;
       min-height: 100vh;
+      transition: background-color 0.6s ease, color 0.6s ease;
+      font-size: 14px; 
+      text-align: center;
+    }
+    
+    .topbar {
+      position: fixed; 
+      top: 15px; 
+      right: 15px;
+      z-index: 1000;
+    }
+    
+    .toggle-btn {
+      font-size: 1.8rem; 
+      background: none; 
+      border: none;
+      color: var(--text-color); 
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      box-shadow: none !important; 
+      padding: 8px; 
+      line-height: 1;
+      border-radius: 50%;
+    }
+    
+    .toggle-btn:hover { 
+      transform: scale(1.3); 
+      background: var(--card-background);
+    }
+
+    .status { 
+      margin-top: 4rem; 
+      font-size: 1.1rem; 
+      font-weight: 600; 
+      color: var(--primary-color);
+      animation: fadeIn 0.5s ease;
+    }
+    
+    .timer {
+      font-size: 3.5rem; 
+      font-weight: bold; 
+      margin: 1.5rem 0;
+      padding: 2rem 3.5rem;
+      background: radial-gradient(circle, #1c1c1c, #000);
+      border: 4px solid var(--primary-color);
+      border-radius: 25px;
+      color: var(--primary-color);
+      animation: pulse 2s infinite;
+      transition: all 0.4s ease;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 15px rgba(0,198,255,0.4); }
+      50% { box-shadow: 0 0 35px rgba(0,198,255,0.8); }
+      100% { box-shadow: 0 0 15px rgba(0,198,255,0.4); }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .buttons {
+      display: flex; 
+      gap: 1.5rem; 
+      flex-wrap: wrap;
+      justify-content: center; 
+      margin-bottom: 2rem;
+    }
+    
+    button {
+      padding: 1.2rem 3rem;
+      font-size: 1.4rem;
+      border-radius: 25px;
+      background: linear-gradient(135deg, #00c6ff, #0066ff, #5f2c82);
+      background-size: 200% 200%;
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(0,198,255,0.4);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    button:hover::before {
+      left: 100%;
+    }
+    
+    button:hover {
+      transform: translateY(-3px) scale(1.05);
+      background-position: right center;
+      background: linear-gradient(135deg, #00e6ff, #3388ff, #7f00ff);
+      box-shadow: 0 20px 40px rgba(0,198,255,0.5);
+    }
+    
+    button:active {
+      transform: translateY(-1px) scale(1.02);
+      box-shadow: 0 8px 16px rgba(0,198,255,0.4);
+    }
+
+    .popup {
+      position: fixed; 
+      top: 0; 
+      left: 0;
+      width: 100%; 
+      height: 100%;
+      backdrop-filter: blur(15px);
+      background: rgba(255, 255, 255, 0.15);
+      display: none; 
+      align-items: center; 
+      justify-content: center;
+      z-index: 999;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    body.dark .popup { 
+      background: rgba(0, 0, 0, 0.5); 
+    }
+    
+    .popup-content {
+      background: var(--background-color); 
+      color: var(--text-color);
+      padding: 2.5rem;
+      border-radius: 25px;
+      width: 90%; 
+      max-width: 500px;
+      box-shadow: 0 0 40px rgba(0,198,255,0.4);
+      animation: slideIn 0.3s ease;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    @keyframes slideIn {
+      from { transform: scale(0.8) translateY(-20px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    
+    .popup-content h3 { 
+      color: var(--primary-color); 
+      margin-bottom: 1.5rem; 
+      font-size: 1.3rem;
+    }
+    
+    .break-activities {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.8rem;
+      margin: 1.5rem 0;
+    }
+    
+    .popup-content label { 
+      display: flex;
+      align-items: center;
+      padding: 0.8rem;
+      border-radius: 10px;
+      background: var(--card-background);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .popup-content label:hover {
+      background: rgba(0,198,255,0.2);
+      transform: translateY(-2px);
+    }
+    
+    .popup-content input[type="checkbox"] { 
+      margin-right: 0.8rem; 
+      transform: scale(1.2);
+      accent-color: var(--primary-color);
+    }
+    
+    .popup-content label:has(input:checked) {
+      background: rgba(0,198,255,0.3);
+      border-color: var(--primary-color);
+    }
+
+    .popup-buttons {
+      display: flex; 
+      justify-content: space-between; 
+      margin-top: 2rem;
+      gap: 1rem;
+    }
+    
+    .popup-buttons button {
+      padding: 1rem 2rem; 
+      border-radius: 15px;
+      font-weight: 600;
+      cursor: pointer; 
+      flex: 1;
+      font-size: 1.1rem;
+    }
+    
+    .cancel-btn {
+      background: #6c757d !important;
+    }
+    
+    .save-btn {
+      background: var(--primary-color) !important;
+      color: #000 !important;
+    }
+
+    .daily-summary {
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem; 
+      width: 100%; 
+      max-width: 800px; 
+      margin: 2rem 0;
+    }
+    
+    .summary-card {
+      padding: 2rem;
+      border-radius: 20px;
+      background: var(--card-background);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      border: 1px solid var(--border-color);
+    }
+    
+    .summary-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0,198,255,0.2);
+    }
+    
+    .summary-title {
+      color: var(--primary-color);
+      margin-bottom: 0.8rem;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    .summary-value {
+      font-size: 2.2rem;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .history {
+      margin: 2rem 0; 
+      width: 100%;
+      max-width: 900px; 
+      text-align: left;
+      background: var(--card-background); 
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .history h3 { 
+      color: var(--primary-color); 
+      font-size: 1.3rem; 
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .history ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .history li { 
+      padding: 1rem; 
+      border-bottom: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
+      background: rgba(0,198,255,0.05);
+      transition: all 0.3s ease;
+    }
+    
+    .history li:hover {
+      background: rgba(0,198,255,0.15);
+      transform: translateX(5px);
+    }
+    
+    .charts-section {
+      width: 100%;
+      max-width: 1200px;
+      margin: 3rem 0;
+    }
+    
+    .chart-container {
+      background: var(--card-background);
+      border-radius: 20px;
+      padding: 2rem;
+      margin: 2rem 0;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .chart-title {
+      color: var(--primary-color);
+      font-size: 1.4rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .chart-toggle {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .toggle-option {
+      padding: 0.5rem 1rem;
+      border: 2px solid var(--primary-color);
+      background: transparent;
+      color: var(--primary-color);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+    
+    .toggle-option.active {
+      background: var(--primary-color);
+      color: #000;
+    }
+    
+    .chart-canvas {
+      position: relative;
+      height: 400px;
+      margin: 1rem 0;
+    }
+    
+    .activity-heatmap {
+      display: grid;
+      grid-template-columns: repeat(24, 1fr);
+      gap: 2px;
+      margin: 2rem 0;
+    }
+    
+    .hour-block {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      background: var(--card-background);
+      transition: all 0.3s ease;
+      cursor: pointer;
       position: relative;
     }
-
-    .back-btn {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      padding: 0.3rem 0.8rem;
-      font-size: 4.6rem;
-      border-radius: 8px;
-      background-color: #00c6ff;
-      color: #000;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-
-    .menu-container {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-    }
-
-    .menu-btn {
-      font-size: 3rem;
-      background: none;
-      border: none;
-      color: #00c6ff;
-      cursor: pointer;
-    }
-
-    .menu-dropdown {
-      display: none;
-      opacity: 0;
-      transform: scale(0.9);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      position: absolute;
-      right: 0;
-      margin-top: 10px;
-      background-color: #1a1a1a;
-      border: 1px solid #00c6ff;
-      border-radius: 10px;
-      padding: 0.5rem;
-      box-shadow: 0 2px 10px rgba(0,198,255,0.4);
-      z-index: 999;
-    }
-
-    .menu-dropdown.show {
-      display: block;
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    .menu-dropdown button {
-      background: linear-gradient(145deg, #222, #111);
-      border: 1px solid #00c6ff;
-      border-radius: 8px;
-      color: #00c6ff;
-      padding: 0.8rem 1.5rem;
-      font-size: 1.6rem;
-      margin-bottom: 0.5rem;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-    }
-
-    .menu-dropdown button:hover {
-      background-color: #00c6ff;
-      color: #000;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0, 198, 255, 0.4);
-    }
-
-    .status {
-      font-size: 2.2rem;
-      margin-top: 90px;
-      margin-bottom: 1.8rem;
-      color: #00c6ff;
-      font-weight: bold;
-    }
-
-    .timer {
-      font-size: 9rem;
-      font-weight: bold;
-      margin: 2rem 0;
-      padding: 2.5rem 4rem;
-      background: radial-gradient(circle at center, #1c1c1c, #000000);
-      border: 5px solid #00c6ff;
-      border-radius: 50px;
-      color: #00c6ff;
-      box-shadow: 0 0 30px rgba(0, 198, 255, 0.4);
-    }
-
-    button {
-      padding: 1.4rem 2.4rem;
-      font-size: 3rem;
-      margin: 1rem;
-      border-radius: 20px;
-      background: linear-gradient(145deg, #00d2ff, #3a7bd5);
-      color: #000;
-      border: none;
-      cursor: pointer;
-      transition: all 0.3s ease-in-out;
-      box-shadow: 0 10px 25px rgba(0, 198, 255, 0.5), inset 0 -4px 6px rgba(0, 0, 0, 0.3);
-    }
-
-    button:hover {
+    
+    .hour-block:hover {
       transform: scale(1.1);
-      background: linear-gradient(145deg, #00f0ff, #1e90ff);
-      box-shadow: 0 12px 30px rgba(0, 198, 255, 0.6), inset 0 -5px 7px rgba(0, 0, 0, 0.4);
     }
-
-    .history {
-      margin-top: 2rem;
-      width: 100%;
-      max-width: 700px;
-      background: rgba(255, 255, 255, 0.08);
-      padding: 1.3rem;
-      border-radius: 14px;
-      text-align: center;
-    }
-
-    .history h3 {
-      margin-bottom: 0.8rem;
-      color: #00c6ff;
-      font-size: 1.8rem;
-    }
-
-    .history ul {
-      list-style-type: none;
-      padding-left: 0;
-    }
-
-    .history li {
-      padding: 1.2rem 0;
-      font-size: 2.2rem;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
-      text-align: center;
+    
+    .hour-block.active-low { background: rgba(0,198,255,0.3); }
+    .hour-block.active-medium { background: rgba(0,198,255,0.6); }
+    .hour-block.active-high { background: rgba(0,198,255,0.9); }
+    
+    .heatmap-legend {
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+    
+    @media (max-width: 768px) {
+      .timer {
+        font-size: 2.5rem;
+        padding: 1.5rem 2.5rem;
+      }
+      
+      button {
+        padding: 1rem 2rem;
+        font-size: 1.2rem;
+      }
+      
+      .daily-summary {
+        grid-template-columns: 1fr;
+      }
+      
+      .chart-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .activity-heatmap {
+        grid-template-columns: repeat(12, 1fr);
+      }
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(0,198,255,0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <button class="back-btn" onclick="window.history.back()">Back</button>
-
-  <div class="menu-container">
-    <button class="menu-btn" onclick="toggleMenu()">︙</button>
-    <div id="menuDropdown" class="menu-dropdown">
-      <button onclick="resetSessions()">Reset Sessions</button>
-    </div>
+  <div class="topbar">
+    <button class="toggle-btn" onclick="toggleTheme()">
+      <i id="themeIcon" class="fas fa-sun"></i>
+    </button>
   </div>
 
   <div class="status" id="readingStatus">Not started</div>
   <div class="timer" id="timerDisplay">00:00:00</div>
 
-  <button onclick="startReading()"><b>Start Reading</b></button>
-  <button onclick="stopReading()"><b>Stop Reading</b></button>
+  <div class="buttons">
+    <button id="startBtn" onclick="handleStartReading()">
+      <i class="fas fa-play"></i> Start Reading
+    </button>
+    <button id="stopBtn" onclick="stopReading()">
+      <i class="fas fa-stop"></i> Stop Reading
+    </button>
+  </div>
+
+  <div class="daily-summary">
+    <div class="summary-card">
+      <div class="summary-title">
+        <i class="fas fa-book"></i> Today's Reading
+      </div>
+      <div class="summary-value" id="totalReadingTime">0h 0m 0s</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-title">
+        <i class="fas fa-coffee"></i> Break Time
+      </div>
+      <div class="summary-value" id="totalBreakTime">0h 0m 0s</div>
+    </div>
+  </div>
 
   <div class="history">
-    <h3>Today's Sessions</h3>
+    <h3>
+      <i class="fas fa-history"></i>
+      Today's Sessions
+    </h3>
     <ul id="sessionList"></ul>
   </div>
 
-  <script>
-    let startTime = null;
-    let timerInterval = null;
+  <div class="charts-section">
+    <!-- Reading Progress Chart -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <div class="chart-title">
+          <i class="fas fa-chart-bar"></i>
+          Reading Progress
+        </div>
+        <div class="chart-toggle">
+          <button class="toggle-option active" onclick="toggleReadingChart('weekly')">Weekly</button>
+          <button class="toggle-option" onclick="toggleReadingChart('monthly')">Monthly</button>
+        </div>
+      </div>
+      <div class="chart-canvas">
+        <canvas id="readingChart"></canvas>
+      </div>
+    </div>
 
-    function startReading() {
-      if (timerInterval) return;
-      startTime = Date.now();
-      localStorage.setItem('ongoing_reading_start', startTime);
-      document.getElementById("readingStatus").textContent = "Reading started...";
-      timerInterval = setInterval(updateReadingTime, 1000);
-    }
+    <!-- Break Activities Chart -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <div class="chart-title">
+          <i class="fas fa-chart-pie"></i>
+          Break Activities Analysis
+        </div>
+        <div class="chart-toggle">
+          <button class="toggle-option active" onclick="toggleBreakChart('weekly')">Weekly</button>
+          <button class="toggle-option" onclick="toggleBreakChart('monthly')">Monthly</button>
+        </div>
+      </div>
+      <div class="chart-canvas">
+        <canvas id="breakChart"></canvas>
+      </div>
+    </div>
 
-    function stopReading(manual = true) {
-      if (!startTime) return;
-      const endTime = Date.now();
-      clearInterval(timerInterval);
-      timerInterval = null;
+    <!-- Activity Heatmap -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <div class="chart-title">
+          <i class="fas fa-calendar-alt"></i>
+          Activity Pattern
+        </div>
+        <div class="chart-toggle">
+          <button class="toggle-option active" onclick="toggleActivityPattern('weekly')">Weekly</button>
+          <button class="toggle-option" onclick="toggleActivityPattern('monthly')">Monthly</button>
+          <button class="toggle-option" onclick="toggleActivityPattern('heatmap')">Hourly Heatmap</button>
+        </div>
+      </div>
+      <div class="chart-canvas" id="activityPatternContainer">
+        <canvas id="activityPatternChart"></canvas>
+        <div id="activityHeatmap" class="activity-heatmap" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
 
-      const totalSeconds = Math.floor((endTime - startTime) / 1000);
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
+  <!-- Break Activities Popup -->
+  <div class="popup" id="breakPopup">
+    <div class="popup-content">
+      <h3>
+        <i class="fas fa-question-circle"></i>
+        What did you do during your break?
+      </h3>
+      <form id="breakForm">
+        <div class="break-activities">
+          <label><input type="checkbox" value="Brushing Teeth" /> <i class="fas fa-tooth"></i> Brushing Teeth</label>
+          <label><input type="checkbox" value="Breakfast" /> <i class="fas fa-utensils"></i> Breakfast</label>
+          <label><input type="checkbox" value="Eating" /> <i class="fas fa-hamburger"></i> Eating</label>
+          <label><input type="checkbox" value="Chatting with Friends" /> <i class="fas fa-comments"></i> Chatting with Friends</label>
+          <label><input type="checkbox" value="Cooking" /> <i class="fas fa-fire-burner"></i> Cooking</label>
+          <label><input type="checkbox" value="Cleaning Room" /> <i class="fas fa-broom"></i> Cleaning Room</label>
+          <label><input type="checkbox" value="Drinking Tea/Coffee" /> <i class="fas fa-mug-hot"></i> Drinking Tea/Coffee</label>
+          <label><input type="checkbox" value="Exercise/Gym" /> <i class="fas fa-dumbbell"></i> Exercise/Gym</label>
+          <label><input type="checkbox" value="Family Time" /> <i class="fas fa-home"></i> Family Time</label>
+          <label><input type="checkbox" value="Gaming" /> <i class="fas fa-gamepad"></i> Gaming</label>
+          <label><input type="checkbox" value="Grocery Shopping" /> <i class="fas fa-shopping-cart"></i> Grocery Shopping</label>
+          <label><input type="checkbox" value="Listening to Music" /> <i class="fas fa-music"></i> Listening to Music</label>
+          <label><input type="checkbox" value="Meditation/Yoga" /> <i class="fas fa-om"></i> Meditation/Yoga</label>
+          <label><input type="checkbox" value="Nap" /> <i class="fas fa-bed"></i> Nap</label>
+          <label><input type="checkbox" value="Prayer" /> <i class="fas fa-pray"></i> Prayer</label>
+          <label><input type="checkbox" value="Phone Call" /> <i class="fas fa-phone"></i> Phone Call</label>
+          <label><input type="checkbox" value="Social Media" /> <i class="fas fa-share-alt"></i> Social Media</label>
+          <label><input type="checkbox" value="Watching Movies/TV" /> <i class="fas fa-tv"></i> Watching Movies/TV</label>
+          <label><input type="checkbox" value="Gardening" /> <i class="fas fa-seedling"></i> Gardening</label>
+          <label><input type="checkbox" value="Other" /> <i class="fas fa-ellipsis-h"></i> Other</label>
+        </div>
+      </form>
+      <div class="popup-buttons">
+        <button type="button" class="cancel-btn" onclick="closePopup()">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="button" class="save-btn" onclick="saveBreakActivities()">
+          <i class="fas fa-save"></i> Save & Continue
+        </button>
+      </div>
+    </div>
+  </div>
 
-      const start = new Date(startTime);
-      const end = new Date(endTime);
-      const formatTime = time =>
-        time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      const sessionText = `${formatTime(start)} — ${formatTime(end)} → ${hours}h ${minutes}m ${seconds}s`;
-
-      if (manual) {
-        document.getElementById("readingStatus").textContent = `Last session: ${hours}h ${minutes}m ${seconds}s`;
-      }
-
-      addSessionToHistory(sessionText);
-      saveSession(sessionText);
-
-      startTime = null;
-      localStorage.removeItem('ongoing_reading_start');
-      document.getElementById("timerDisplay").textContent = "00:00:00";
-    }
-
-    function updateReadingTime() {
-      const savedStart = localStorage.getItem('ongoing_reading_start');
-      if (!savedStart) return;
-      const elapsed = Math.floor((Date.now() - parseInt(savedStart)) / 1000);
-      const hours = Math.floor(elapsed / 3600);
-      const minutes = Math.floor((elapsed % 3600) / 60);
-      const seconds = elapsed % 60;
-      document.getElementById("timerDisplay").textContent =
-        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
-
-    function addSessionToHistory(text) {
-      const list = document.getElementById("sessionList");
-      const listItem = document.createElement("li");
-      listItem.textContent = text;
-      list.appendChild(listItem);
-    }
-
-    function saveSession(text) {
-      const key = 'reading_data';
-      const today = getTodayDate();
-      let data = JSON.parse(localStorage.getItem(key)) || { date: today, sessions: [] };
-
-      if (data.date !== today) {
-        data = { date: today, sessions: [] };
-      }
-
-      data.sessions.push(text);
-      localStorage.setItem(key, JSON.stringify(data));
-    }
-
-    function loadSessions() {
-      const key = 'reading_data';
-      const today = getTodayDate();
-      let data = JSON.parse(localStorage.getItem(key));
-
-      if (data && data.date === today && Array.isArray(data.sessions)) {
-        data.sessions.forEach(addSessionToHistory);
-      } else {
-        localStorage.setItem(key, JSON.stringify({
-          date: today,
-          sessions: []
-        }));
-      }
-    }
-
-    function getTodayDate() {
-      return new Date().toISOString().split('T')[0];
-    }
-
-    function scheduleMidnightReset() {
-      const now = new Date();
-      const millisTillMidnight = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate() + 1,
-        0, 0, 0, 0
-      ) - now;
-
-      setTimeout(() => {
-        localStorage.setItem('reading_data', JSON.stringify({
-          date: getTodayDate(),
-          sessions: []
-        }));
-        document.getElementById("sessionList").innerHTML = '';
-        scheduleMidnightReset();
-      }, millisTillMidnight);
-    }
-
-    function toggleMenu() {
-      const dropdown = document.getElementById("menuDropdown");
-      dropdown.classList.toggle("show");
-    }
-
-    function resetSessions() {
-      localStorage.setItem('reading_data', JSON.stringify({
-        date: getTodayDate(),
-        sessions: []
-      }));
-      document.getElementById("sessionList").innerHTML = '';
-      document.getElementById("readingStatus").textContent = "Sessions reset.";
-      toggleMenu();
-    }
-
-    window.addEventListener('click', function(e) {
-      if (!e.target.closest('.menu-container')) {
-        document.getElementById("menuDropdown").classList.remove("show");
-      }
-    });
-
-    window.addEventListener('load', () => {
-      const savedStart = localStorage.getItem('ongoing_reading_start');
-      if (savedStart) {
-        startTime = parseInt(savedStart);
-        document.getElementById("readingStatus").textContent = "Reading resumed...";
-        timerInterval = setInterval(updateReadingTime, 1000);
-      }
-      loadSessions();
-      scheduleMidnightReset();
-    });
-
-    window.addEventListener('beforeunload', () => {
-      if (startTime) {
-        stopReading(false);
-      }
-    });
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
